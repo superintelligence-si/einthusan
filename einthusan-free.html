@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <title>Einthusan Link Transformer & Direct CDN Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body class="min-h-full flex flex-col font-sans bg-slate-900 text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/20">
+                    <i class="fa-solid fa-play text-white text-base pl-0.5"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                        Einthusan Link Transformer
+                    </h1>
+                    <p class="text-xs text-slate-400">No Need to wait for buffering or Ads, watch the movies directly, just paste the complete link to the Einthusan movie and this app will give you the direct link to the video</p>
+                </div>
+            </div>
+            
+            <!-- Mode Toggle Switch (Single vs Batch) -->
+            <div class="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700/60">
+                <button id="tab-single-btn" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-link"></i> Single Converter
+                </button>
+                <button id="tab-batch-btn" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-list-check"></i> Batch Mode
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+
+        <!-- SINGLE LINK VIEW -->
+        <div id="view-single" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- LEFT INPUT & CONFIG COLUMN -->
+            <div class="lg:col-span-7 flex flex-col gap-5">
+                
+                <!-- INPUT URL -->
+                <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-5 shadow-xl relative">
+                    <label for="input-url" class="block text-sm font-semibold text-slate-200 mb-2 flex items-center justify-between">
+                        <span class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 text-xs flex items-center justify-center font-bold">1</span>
+                            Einthusan Movie URL
+                        </span>
+                        <button id="clear-input-btn" class="text-xs text-slate-500 hover:text-slate-300">Clear</button>
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="input-url" placeholder="https://einthusan.tv/movie/watch/4nhX/?lang=hindi" value="https://einthusan.tv/movie/watch/4nhX/?lang=hindi"
+                            class="w-full bg-slate-900 border border-slate-700 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 rounded-xl px-4 py-3 text-xs sm:text-sm text-slate-100 placeholder-slate-500 outline-none transition font-mono pr-10">
+                        <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+                            <i class="fa-solid fa-globe"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLLAPSIBLE ADVANCED SETTINGS -->
+                <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl shadow-xl overflow-hidden">
+                    <button id="toggle-settings-btn" class="w-full p-5 flex items-center justify-between text-left hover:bg-slate-800/80 transition">
+                        <span class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-indigo-400"></i> Advanced Link & CDN Customization
+                        </span>
+                        <span class="text-xs text-slate-400 flex items-center gap-1.5">
+                            <span id="settings-status-label">Default (cdn2.einthusan.io)</span>
+                            <i id="settings-chevron" class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-200"></i>
+                        </span>
+                    </button>
+
+                    <div id="settings-panel" class="hidden p-5 pt-0 border-t border-slate-700/40 flex flex-col gap-4 mt-3">
+                        <div>
+                            <label for="target-base-url" class="text-[11px] text-slate-400 mb-1 block font-medium">Target Base CDN URL:</label>
+                            <input type="text" id="target-base-url" placeholder="https://cdn2.einthusan.io/etv/content/" value="https://cdn2.einthusan.io/etv/content/"
+                                class="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 rounded-xl px-4 py-2.5 text-xs text-slate-100 font-mono outline-none">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label for="target-prefix" class="text-[11px] text-slate-400 mb-1 block font-medium">Movie ID Prefix:</label>
+                                <input type="text" id="target-prefix" placeholder="D" value="D"
+                                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono outline-none focus:border-indigo-500">
+                                <span class="text-[10px] text-slate-500 mt-1 block">Prepended directly to ID (e.g. D + 4nhX)</span>
+                            </div>
+                            <div>
+                                <label for="target-suffix" class="text-[11px] text-slate-400 mb-1 block font-medium">File Extension:</label>
+                                <input type="text" id="target-suffix" placeholder=".mp4" value=".mp4"
+                                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 font-mono outline-none focus:border-indigo-500">
+                                <span class="text-[10px] text-slate-500 mt-1 block">Appended extension (e.g. .mp4)</span>
+                            </div>
+                        </div>
+
+                        <button id="reset-settings-btn" class="self-end text-xs text-indigo-400 hover:text-indigo-300 font-medium">
+                            Reset Defaults
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT OUTPUT / PREVIEW BREAKDOWN CARD -->
+            <div class="lg:col-span-5 flex flex-col gap-6">
+
+                <div class="bg-gradient-to-b from-slate-800/90 to-slate-900 border border-slate-700/80 rounded-2xl p-6 shadow-2xl flex flex-col justify-between h-full sticky top-24">
+                    <div>
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                            <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Step-by-step Transformation
+                            </span>
+                            <span id="status-badge" class="text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                                Ready
+                            </span>
+                        </div>
+
+                        <!-- Visual Breakdown Steps -->
+                        <div class="mt-4 flex flex-col gap-3">
+                            
+                            <!-- Step 1: Input URL -->
+                            <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-xs">
+                                <span class="text-[10px] font-semibold uppercase text-slate-500 block mb-1">1. Source URL</span>
+                                <div id="breakdown-input-url" class="font-mono text-slate-300 truncate">https://einthusan.tv/movie/watch/4nhX/?lang=hindi</div>
+                            </div>
+
+                            <!-- Step 2: Extracted ID -->
+                            <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-xs flex items-center justify-between">
+                                <div>
+                                    <span class="text-[10px] font-semibold uppercase text-slate-500 block mb-1">2. Extracted Movie ID</span>
+                                    <span id="breakdown-id" class="font-mono text-amber-300 font-bold text-sm">4nhX</span>
+                                </div>
+                                <button id="copy-id-btn" title="Copy ID" class="text-slate-500 hover:text-slate-200 p-1 transition">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+
+                            <!-- Step 3: Formatted File Name -->
+                            <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-xs">
+                                <span class="text-[10px] font-semibold uppercase text-slate-500 block mb-1">3. Formatted CDN File Name</span>
+                                <div id="breakdown-filename" class="font-mono text-purple-300 font-bold">D4nhX.mp4</div>
+                            </div>
+
+                            <!-- Step 4: Final Link -->
+                            <div class="p-3.5 bg-slate-950/90 rounded-xl border border-emerald-500/30 text-xs">
+                                <span class="text-[10px] font-semibold uppercase text-emerald-400 block mb-1">4. Constructed CDN Stream Link</span>
+                                <a id="final-url-text" href="https://cdn2.einthusan.io/etv/content/D4nhX.mp4" target="_blank" class="font-mono text-xs sm:text-sm text-emerald-300 break-all hover:underline leading-relaxed block">
+                                    https://cdn2.einthusan.io/etv/content/D4nhX.mp4
+                                </a>
+                            </div>
+
+                        </div>
+
+                        <!-- Error Message Alert Container -->
+                        <div id="error-box" class="mt-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-300 text-xs hidden flex items-start gap-2">
+                            <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                            <span id="error-message">Could not extract a valid Einthusan movie ID.</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-6 pt-4 border-t border-slate-800/80 flex flex-col gap-2.5">
+                        <button id="copy-btn" class="w-full py-3 px-4 bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-slate-950 font-bold text-sm rounded-xl shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2">
+                            <i class="fa-regular fa-copy text-base"></i> Copy Direct CDN Link
+                        </button>
+                        <a id="open-btn" href="https://cdn2.einthusan.io/etv/content/D4nhX.mp4" target="_blank" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-sm rounded-xl border border-slate-700 transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i> Open Stream Link in New Tab
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- BATCH MODE VIEW -->
+        <div id="view-batch" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Left Batch Input -->
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-5 shadow-xl flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                    <label for="batch-input" class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-amber-400"></i> Einthusan Links List (1 per line)
+                    </label>
+                    <span id="batch-count" class="text-xs text-slate-400 font-mono">3 links</span>
+                </div>
+                <textarea id="batch-input" rows="12" placeholder="https://einthusan.tv/movie/watch/4nhX/?lang=hindi&#10;https://einthusan.tv/movie/watch/8kLM/?lang=tamil&#10;https://einthusan.tv/movie/watch/9pQR/?lang=telugu"
+                    class="w-full bg-slate-900 border border-slate-700 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 rounded-xl p-3 text-xs text-slate-100 placeholder-slate-600 outline-none transition font-mono leading-relaxed resize-y">https://einthusan.tv/movie/watch/4nhX/?lang=hindi
+https://einthusan.tv/movie/watch/8kLM/?lang=tamil
+https://einthusan.tv/movie/watch/9pQR/?lang=telugu</textarea>
+                <p class="text-[11px] text-slate-500">Paste multiple movie page links at once to generate direct CDN streams in bulk.</p>
+            </div>
+
+            <!-- Right Batch Output -->
+            <div class="bg-slate-800/60 border border-slate-700/50 rounded-2xl p-5 shadow-xl flex flex-col gap-3 justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check"></i> Converted Direct CDN Links
+                        </label>
+                        <button id="batch-clear-btn" class="text-xs text-slate-400 hover:text-slate-200">Clear All</button>
+                    </div>
+                    <textarea id="batch-output" readonly rows="12" 
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-emerald-400 outline-none font-mono leading-relaxed resize-y select-all"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 pt-2">
+                    <button id="batch-copy-btn" class="py-2.5 px-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow transition flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-copy"></i> Copy All Links
+                    </button>
+                    <button id="batch-download-btn" class="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs rounded-xl border border-slate-700 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-file-arrow-down"></i> Export .TXT
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-medium flex items-center gap-2 transition-all duration-300 translate-y-12 opacity-0 pointer-events-none z-50">
+        <i class="fa-solid fa-circle-check text-sm"></i>
+        <span id="toast-text">Copied to clipboard!</span>
+    </div>
+
+    <script>
+        // Default Configuration
+        const DEFAULTS = {
+            targetBaseUrl: 'https://cdn2.einthusan.io/etv/content/',
+            targetPrefix: 'D',
+            targetSuffix: '.mp4'
+        };
+
+        // App State
+        const state = {
+            view: 'single', // 'single' or 'batch'
+            inputUrl: 'https://einthusan.tv/movie/watch/4nhX/?lang=hindi',
+            targetBaseUrl: DEFAULTS.targetBaseUrl,
+            targetPrefix: DEFAULTS.targetPrefix,
+            targetSuffix: DEFAULTS.targetSuffix,
+            extractedId: '',
+            finalUrl: ''
+        };
+
+        // DOM Elements
+        const viewSingle = document.getElementById('view-single');
+        const viewBatch = document.getElementById('view-batch');
+        const tabSingleBtn = document.getElementById('tab-single-btn');
+        const tabBatchBtn = document.getElementById('tab-batch-btn');
+
+        const inputUrlEl = document.getElementById('input-url');
+        const clearInputBtn = document.getElementById('clear-input-btn');
+        
+        const toggleSettingsBtn = document.getElementById('toggle-settings-btn');
+        const settingsPanel = document.getElementById('settings-panel');
+        const settingsChevron = document.getElementById('settings-chevron');
+        const resetSettingsBtn = document.getElementById('reset-settings-btn');
+        const settingsStatusLabel = document.getElementById('settings-status-label');
+
+        const targetBaseUrlEl = document.getElementById('target-base-url');
+        const targetPrefixEl = document.getElementById('target-prefix');
+        const targetSuffixEl = document.getElementById('target-suffix');
+        
+        const breakdownInputUrl = document.getElementById('breakdown-input-url');
+        const breakdownId = document.getElementById('breakdown-id');
+        const breakdownFilename = document.getElementById('breakdown-filename');
+        const finalUrlTextEl = document.getElementById('final-url-text');
+
+        const statusBadgeEl = document.getElementById('status-badge');
+        const errorBoxEl = document.getElementById('error-box');
+        const errorMessageEl = document.getElementById('error-message');
+        
+        const copyBtn = document.getElementById('copy-btn');
+        const copyIdBtn = document.getElementById('copy-id-btn');
+        const openBtn = document.getElementById('open-btn');
+        const toastEl = document.getElementById('toast');
+        const toastTextEl = document.getElementById('toast-text');
+
+        // Batch Elements
+        const batchInput = document.getElementById('batch-input');
+        const batchOutput = document.getElementById('batch-output');
+        const batchCount = document.getElementById('batch-count');
+        const batchCopyBtn = document.getElementById('batch-copy-btn');
+        const batchDownloadBtn = document.getElementById('batch-download-btn');
+        const batchClearBtn = document.getElementById('batch-clear-btn');
+
+        // Specific Einthusan ID Scraper Function
+        function extractEinthusanId(urlStr) {
+            if (!urlStr || !urlStr.trim()) return { id: '', error: 'URL input is empty' };
+
+            const cleanUrl = urlStr.trim();
+
+            // Match watch/ID patterns or last segment before query parameters
+            // Example: https://einthusan.tv/movie/watch/4nhX/?lang=hindi
+            const watchMatch = cleanUrl.match(/\/watch\/([a-zA-Z0-9]+)/i);
+            if (watchMatch && watchMatch[1]) {
+                return { id: watchMatch[1], error: null };
+            }
+
+            // Fallback match: last path segment before query parameters
+            try {
+                const pathWithoutQuery = cleanUrl.split('?')[0].replace(/\/+$/, '');
+                const segments = pathWithoutQuery.split('/').filter(Boolean);
+                const lastSegment = segments[segments.length - 1];
+                if (lastSegment && /^[a-zA-Z0-9]+$/.test(lastSegment)) {
+                    return { id: lastSegment, error: null };
+                }
+            } catch (e) {
+                // Ignore parse errors
+            }
+
+            return { id: '', error: 'Could not find a valid movie ID (e.g. /watch/4nhX/)' };
+        }
+
+        // Live Single Converter Update Loop
+        function updateResult() {
+            state.inputUrl = inputUrlEl.value.trim();
+            state.targetBaseUrl = targetBaseUrlEl.value.trim();
+            state.targetPrefix = targetPrefixEl.value;
+            state.targetSuffix = targetSuffixEl.value;
+
+            // Check custom settings status
+            const isCustom = state.targetBaseUrl !== DEFAULTS.targetBaseUrl || 
+                             state.targetPrefix !== DEFAULTS.targetPrefix || 
+                             state.targetSuffix !== DEFAULTS.targetSuffix;
+            
+            settingsStatusLabel.textContent = isCustom ? 'Custom CDN Configured' : 'Default (cdn2.einthusan.io)';
+
+            if (!state.inputUrl) {
+                breakdownInputUrl.textContent = '--';
+                breakdownId.textContent = '--';
+                breakdownFilename.textContent = '--';
+                finalUrlTextEl.textContent = '--';
+                statusBadgeEl.textContent = 'Awaiting Input';
+                statusBadgeEl.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700';
+                errorBoxEl.classList.add('hidden');
+                openBtn.classList.add('pointer-events-none', 'opacity-60');
+                return;
+            }
+
+            breakdownInputUrl.textContent = state.inputUrl;
+
+            const { id, error } = extractEinthusanId(state.inputUrl);
+
+            if (error) {
+                breakdownId.textContent = '--';
+                breakdownFilename.textContent = '--';
+                finalUrlTextEl.textContent = '--';
+                statusBadgeEl.textContent = 'Extraction Error';
+                statusBadgeEl.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40';
+                errorMessageEl.textContent = error;
+                errorBoxEl.classList.remove('hidden');
+                openBtn.classList.add('pointer-events-none', 'opacity-60');
+                state.extractedId = '';
+                state.finalUrl = '';
+            } else {
+                errorBoxEl.classList.add('hidden');
+                state.extractedId = id;
+
+                const filename = `${state.targetPrefix}${id}${state.targetSuffix}`;
+                state.finalUrl = `${state.targetBaseUrl}${filename}`;
+
+                breakdownId.textContent = id;
+                breakdownFilename.textContent = filename;
+                finalUrlTextEl.textContent = state.finalUrl;
+                finalUrlTextEl.href = state.finalUrl;
+
+                statusBadgeEl.textContent = 'Ready';
+                statusBadgeEl.className = 'text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+
+                openBtn.classList.remove('pointer-events-none', 'opacity-60');
+                openBtn.href = state.finalUrl;
+            }
+
+            // Sync Batch Mode
+            updateBatchResults();
+        }
+
+        // Batch Converter Update Loop
+        function updateBatchResults() {
+            const lines = batchInput.value.split('\n').map(l => l.trim()).filter(Boolean);
+            batchCount.textContent = `${lines.length} link${lines.length === 1 ? '' : 's'}`;
+
+            const outputs = lines.map(line => {
+                const { id, error } = extractEinthusanId(line);
+                if (error || !id) return `# Invalid URL: (${line})`;
+                const filename = `${state.targetPrefix}${id}${state.targetSuffix}`;
+                return `${state.targetBaseUrl}${filename}`;
+            });
+
+            batchOutput.value = outputs.join('\n');
+        }
+
+        // Copy Helper
+        function copyToClipboard(text, msg = 'Copied to clipboard!') {
+            if (!text || text === '--') return;
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            temp.style.position = 'fixed';
+            temp.style.opacity = '0';
+            document.body.appendChild(temp);
+            temp.select();
+            try {
+                document.execCommand('copy');
+                showToast(msg);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                document.body.removeChild(temp);
+            }
+        }
+
+        function showToast(msg) {
+            toastTextEl.textContent = msg;
+            toastEl.classList.remove('translate-y-12', 'opacity-0', 'pointer-events-none');
+            setTimeout(() => {
+                toastEl.classList.add('translate-y-12', 'opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        // Mode Switching
+        tabSingleBtn.addEventListener('click', () => {
+            state.view = 'single';
+            tabSingleBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow transition flex items-center gap-1.5';
+            tabBatchBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5';
+            viewSingle.classList.remove('hidden');
+            viewBatch.classList.add('hidden');
+        });
+
+        tabBatchBtn.addEventListener('click', () => {
+            state.view = 'batch';
+            tabBatchBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow transition flex items-center gap-1.5';
+            tabSingleBtn.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-400 hover:text-white transition flex items-center gap-1.5';
+            viewBatch.classList.remove('hidden');
+            viewSingle.classList.add('hidden');
+            updateBatchResults();
+        });
+
+        // Collapsible Settings Toggle
+        toggleSettingsBtn.addEventListener('click', () => {
+            const isHidden = settingsPanel.classList.contains('hidden');
+            if (isHidden) {
+                settingsPanel.classList.remove('hidden');
+                settingsChevron.classList.add('rotate-180');
+            } else {
+                settingsPanel.classList.add('hidden');
+                settingsChevron.classList.remove('rotate-180');
+            }
+        });
+
+        // Reset Settings
+        resetSettingsBtn.addEventListener('click', () => {
+            targetBaseUrlEl.value = DEFAULTS.targetBaseUrl;
+            targetPrefixEl.value = DEFAULTS.targetPrefix;
+            targetSuffixEl.value = DEFAULTS.targetSuffix;
+            updateResult();
+            showToast('Reset settings to default!');
+        });
+
+        // Sample Test Click Handlers
+        document.querySelectorAll('.sample-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sampleUrl = btn.getAttribute('data-sample');
+                inputUrlEl.value = sampleUrl;
+                updateResult();
+                showToast('Loaded sample link!');
+            });
+        });
+
+        // Event Listeners for Reactive Updates
+        [inputUrlEl, targetBaseUrlEl, targetPrefixEl, targetSuffixEl].forEach(el => {
+            el.addEventListener('input', updateResult);
+        });
+
+        batchInput.addEventListener('input', updateBatchResults);
+
+        clearInputBtn.addEventListener('click', () => {
+            inputUrlEl.value = '';
+            updateResult();
+        });
+
+        batchClearBtn.addEventListener('click', () => {
+            batchInput.value = '';
+            updateBatchResults();
+        });
+
+        // Actions
+        copyBtn.addEventListener('click', () => copyToClipboard(state.finalUrl, 'CDN stream link copied!'));
+        copyIdBtn.addEventListener('click', () => copyToClipboard(state.extractedId, 'Movie ID copied!'));
+        batchCopyBtn.addEventListener('click', () => copyToClipboard(batchOutput.value, 'All CDN links copied!'));
+
+        // Export TXT
+        batchDownloadBtn.addEventListener('click', () => {
+            const text = batchOutput.value;
+            if (!text) return;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'einthusan_direct_links.txt';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            showToast('Downloaded text file!');
+        });
+
+        // Initial Load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateResult();
+        });
+    </script>
+</body>
+</html>
